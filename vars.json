@@ -1,7 +1,7 @@
 [
     {
       "ParameterKey": "VpcName",
-      "ParameterValue": "VPC"
+      "ParameterValue": "VirtualCloud"
     }, 
     {
       "ParameterKey": "VpcCidr",
@@ -30,5 +30,21 @@
     {
         "ParameterKey": "Subnet3AZs",
         "ParameterValue": "us-east-1c"
+    },
+    {
+        "ParameterKey": "SSHLocation",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey": "SSHKeyPair",
+        "ParameterValue": "ssh"
+    },
+    {
+        "ParameterKey": "WebserverInstanceType",
+        "ParameterValue": "t2.micro"
+    },
+    {
+        "ParameterKey": "WebserverAMIID",
+        "ParameterValue": "ami-02cc67c8f8ce712c1"
     }
 ]
