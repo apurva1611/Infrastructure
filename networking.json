@@ -109,6 +109,11 @@
     "Description": "Enter size of ec2 instance.",
     "Type": "Number",
     "Default": "20"
+  },
+  "PublicAccessible": {
+    "Description": "Choose public accessibility of Db instance",
+    "Type": "String",
+    "Default": "false"
   }
   },
   "Mappings": {},
@@ -527,6 +532,7 @@
         "MasterUserPassword": {
             "Ref": "DBPassword"
         },
+        "PubliclyAccessible" : {"Ref":"PublicAccessible"},
         "Port": {
             "Ref": "TcpPort"
         },
@@ -542,7 +548,6 @@
   },
   "S3Bucket": {
     "Type": "AWS::S3::Bucket",
-    "DeletionPolicy": "Retain",
     "Properties": {
       "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
