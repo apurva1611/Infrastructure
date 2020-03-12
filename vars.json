@@ -45,6 +45,14 @@
     },
     {
         "ParameterKey": "WebserverAMIID",
-        "ParameterValue": "ami-02cc67c8f8ce712c1"
-    }
+        "ParameterValue": "ami-01e4dcf2ca18d70c5"
+    },
+    {
+        "ParameterKey": "CircleCIUser",
+        "ParameterValue": "circleci"
+    },
+    {
+        "ParameterKey": "S3CodeBucket",
+        "ParameterValue": "codedeploy.apurva.tld"
+    } 
 ]
