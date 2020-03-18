@@ -719,7 +719,7 @@
                       "codedeploy:GetApplicationRevision"
                   ],
                   "Resource": [
-                      "arn:aws:codedeploy:us-east-1:296298822745:application:csye6225-webapp"
+                      "arn:aws:codedeploy:us-east-1:934490181790:application:csye6225-webapp"
                   ]
               },
               {
@@ -738,9 +738,9 @@
                       "codedeploy:GetDeploymentConfig"
                   ],
                   "Resource": [
-                      "arn:aws:codedeploy:us-east-1:296298822745:deploymentconfig:CodeDeployDefault.OneAtATime",
-                      "arn:aws:codedeploy:us-east-1:296298822745:deploymentconfig:CodeDeployDefault.HalfAtATime",
-                      "arn:aws:codedeploy:us-east-1:296298822745:deploymentconfig:CodeDeployDefault.AllAtOnce"
+                      "arn:aws:codedeploy:us-east-1:934490181790:deploymentconfig:CodeDeployDefault.OneAtATime",
+                      "arn:aws:codedeploy:us-east-1:934490181790:deploymentconfig:CodeDeployDefault.HalfAtATime",
+                      "arn:aws:codedeploy:us-east-1:934490181790:deploymentconfig:CodeDeployDefault.AllAtOnce"
                   ]
               }
           ]
@@ -841,6 +841,62 @@
       "ManagedPolicyName": "CodeDeployEC2S3"
   },
   "DependsOn": "CodeDeployEC2ServiceRole"
+},
+"CodeDeployApplication": {
+  "Type": "AWS::CodeDeploy::Application",
+  "Properties": {
+    "ApplicationName": "csye6225-webapp",
+    "ComputePlatform": "Server"
+  }
+},
+"CodeDeployDeploymentGroup":{
+  "Type" : "AWS::CodeDeploy::DeploymentGroup",
+  "Properties" : {
+    "ApplicationName" : { "Ref": "CodeDeployApplication" },
+    "DeploymentGroupName" : "csye6225-webapp-deployment",
+    "DeploymentStyle": {
+      "DeploymentType":  "IN_PLACE",
+      "DeploymentOption": "WITHOUT_TRAFFIC_CONTROL"
+    },
+    "Ec2TagFilters":[{
+      "Key" :"Name",
+      "Type" : "KEY_AND_VALUE",
+      "Value" : "Webserver1"
+    }],
+    "ServiceRoleArn": { "Fn::GetAtt":[
+      "CodeDeployServiceRole", "Arn"
+     ]
+},
+    "DeploymentConfigName": "CodeDeployDefault.AllAtOnce",
+    "AutoRollbackConfiguration": {
+      "Enabled": true,
+      "Events": ["DEPLOYMENT_FAILURE"]
+    }
+  }
+},
+"CodeDeployServiceRole": {
+  "Type": "AWS::IAM::Role",
+  "Properties": {
+    "RoleName": "CodeDeployServiceRole",
+    "AssumeRolePolicyDocument": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codedeploy.amazonaws.com"
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+      }
+    ]
+    },
+    "ManagedPolicyArns": [
+    "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+    ],
+    "Path": "/"
+  }
 }
 },
 "Outputs": {}

@@ -37,7 +37,7 @@
     },
     {
         "ParameterKey": "SSHKeyPair",
-        "ParameterValue": "ssh"
+        "ParameterValue": "sshProd"
     },
     {
         "ParameterKey": "WebserverInstanceType",
@@ -45,7 +45,7 @@
     },
     {
         "ParameterKey": "WebserverAMIID",
-        "ParameterValue": "ami-01e4dcf2ca18d70c5"
+        "ParameterValue": "ami-0d330a2d40cdb0544"
     },
     {
         "ParameterKey": "CircleCIUser",
@@ -53,6 +53,6 @@
     },
     {
         "ParameterKey": "S3CodeBucket",
-        "ParameterValue": "codedeploy.apurva.tld"
+        "ParameterValue": "codedeploy.apurvamathur.tld"
     } 
 ]
