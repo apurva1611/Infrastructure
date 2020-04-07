@@ -130,6 +130,11 @@
       "Description": "Choose CErtificate name",
       "Type": "String",
       "Default": "prod.apurvamathur.me"
+    },
+    "mySNSTopicName": {
+      "Description": "SNS topic name",
+      "Type": "String",
+      "Default": "SNSBILL"
     }
     },
     "Mappings": {},
@@ -1118,7 +1123,7 @@
       "Statistic": "Average",
       "Period": "60",
       "EvaluationPeriods": "1",
-      "Threshold": "5",
+      "Threshold": "10",
       "AlarmActions": [
           {
               "Ref": "WebServerScaleUpPolicy"
@@ -1160,7 +1165,283 @@
       ],
       "ComparisonOperator": "LessThanThreshold"
   }
-}    
+},
+"SNSPolicy": {
+  "Type": "AWS::IAM::ManagedPolicy",
+  "Properties": {
+      "Description": "This policy allows EC2 to access SNS",
+      "Path": "/",
+      "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Action": [
+                      "SNS:*"
+                  ],
+                  "Resource": [
+                      "*"
+                  ]
+              }
+          ]
+      },
+      "Roles": [
+          {
+              "Ref": "CodeDeployEC2ServiceRole"
+          }
+      ],
+      "ManagedPolicyName": "SNSPolicy"
+  },
+  "DependsOn": "CodeDeployEC2ServiceRole"
+},
+"MySNS": {
+  "Type": "AWS::SNS::Topic",
+  "DependsOn": "MyLambdaFunction",
+  "Properties": {
+      "TopicName": {
+          "Ref": "mySNSTopicName"
+      },
+      "Subscription": [
+          {
+              "Endpoint": {
+                  "Fn::GetAtt": [
+                      "MyLambdaFunction",
+                      "Arn"
+                  ]
+              },
+              "Protocol": "lambda"
+          }
+      ],
+      "DisplayName": "MySNS"
+  }
+},
+"LambdaExecutionRole": {
+  "Type": "AWS::IAM::Role",
+  "Properties": {
+      "AssumeRolePolicyDocument": {
+          "Statement": [
+              {
+                  "Action": [
+                      "sts:AssumeRole"
+                  ],
+                  "Effect": "Allow",
+                  "Principal": {
+                      "Service": [
+                          "lambda.amazonaws.com"
+                      ]
+                  }
+              }
+          ],
+          "Version": "2012-10-17"
+      },
+      "Path": "/",
+      "RoleName": "LambdaExecutionRole",
+      "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSESFullAccess"
+      ]
+  }
+},
+"LambdaExecutionCircleCI":{
+  "Type": "AWS::IAM::ManagedPolicy",
+  "Properties": {
+      "ManagedPolicyName": "LambdaExecutionCircleCI",
+      "Description": "Upload to S3",
+      "Path": "/",
+      "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Sid": "ConfigureFunctions",
+                  "Effect": "Allow",
+                  "Action": [
+                      "lambda:CreateFunction",
+                      "lambda:UpdateFunctionConfiguration",
+                      "lambda:UpdateFunctionCode"
+                  ],
+                  "Resource": "*"
+              }
+          ]
+      },
+      "Users": [
+          {
+              "Ref": "CircleCIUser"
+          }
+      ]
+  } 
+},
+"MyLambdaFunction": {
+  "Type": "AWS::Lambda::Function",
+  "Properties": {
+      "FunctionName": "MyLambdaFunction",
+      "Handler": "index.handler",
+      "Code": {
+          "S3Bucket": {
+              "Ref": "S3CodeBucket"
+          },
+          "S3Key": "csye6225-web-app-155.zip"
+      },
+      "Role":{
+          "Fn::GetAtt":[
+             "LambdaExecutionRole",
+             "Arn"
+          ]
+       },
+      "Description": "lambda to host webapp",
+      "Environment": {
+          "Variables": {
+              "DOMAIN_NAME": {
+                  "Fn::Join": [
+                      "",
+                      [
+                          "https://www.",
+                          {
+                              "Ref": "domain"
+                          }
+                      ]
+                  ]
+              },
+              "FROM_EMAIL": {
+                  "Fn::Join": [
+                      "",
+                      [
+                          "no-reply@test.",
+                          {
+                              "Ref": "domain"
+                          }
+                      ]
+                  ]
+              },
+              "TABLENAME": "csye6225",
+              "TTL": "20"
+          }
+      },
+      "Runtime": "nodejs12.x",
+      "Timeout": 100,
+      "MemorySize": 256
+  }
+},
+"LambdaSESPolicy":{
+  "Type":"AWS::IAM::Policy",
+  "Properties":{
+     "PolicyName":"LambdaSESPolicy",
+     "PolicyDocument":{
+        "Version":"2012-10-17",
+        "Statement":[
+           {
+              "Effect":"Allow",
+              "Action":[
+                 "ses:SendEmail",
+                 "ses:SendRawEmail"
+              ],
+              "Resource":"*"
+           }
+        ]
+     },
+     "Roles":[
+        {
+           "Ref":"LambdaExecutionRole"
+        }
+     ]
+  }
+},
+"LambdaDynamoDBPolicy":{
+  "Type":"AWS::IAM::Policy",
+  "Properties":{
+     "PolicyName":"LambdaDynamoDBPolicy",
+     "PolicyDocument":{
+        "Version":"2012-10-17",
+        "Statement":[
+           {
+              "Effect":"Allow",
+              "Action":[
+                 "dynamodb:BatchGetItem",
+                 "dynamodb:GetItem",
+                 "dynamodb:Query",
+                 "dynamodb:Scan",
+                 "dynamodb:BatchWriteItem",
+                 "dynamodb:PutItem",
+                 "dynamodb:UpdateItem"
+              ],
+              "Resource":{
+                  "Fn::GetAtt":[
+                      "AWSdynamotable",
+                      "Arn"
+                   ]
+              }
+           }
+        ]
+     },
+     "Roles":[
+        {
+           "Ref":"LambdaExecutionRole"
+        }
+     ]
+  }
+},
+"AWSdynamotable": {
+  "Type": "AWS::DynamoDB::Table",
+  "Properties": {
+      "AttributeDefinitions": [
+          {
+              "AttributeName": "id",
+              "AttributeType": "S"
+          }
+      ],
+      "TableName": "csye6225",
+      "KeySchema": [
+          {
+              "AttributeName": "id",
+              "KeyType": "HASH"
+          }
+      ],
+      "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+      },
+      "TimeToLiveSpecification": {
+          "AttributeName": "TTL",
+          "Enabled": true
+      }
+  }
+},"LambdaResourcePolicy":{
+  "Type":"AWS::Lambda::Permission",
+  "Properties":{
+     "FunctionName":{
+        "Ref":"MyLambdaFunction"
+     },
+     "Principal":"sns.amazonaws.com",
+     "Action":"lambda:InvokeFunction",
+     "SourceArn":{
+      "Ref": "MySNS"
+     }
+  }
+},
+"LambdaSNSSubscription":{
+  "Type":"AWS::SNS::Subscription",
+  "DependsOn":[
+     "MyLambdaFunction"
+  ],
+  "Properties":{
+     "Endpoint":{
+        "Fn::GetAtt":[
+           "MyLambdaFunction",
+           "Arn"
+        ]
+     },
+     "Protocol":"lambda",
+     "TopicArn":{
+      "Ref": "MySNS"
+     }
+  }
+},
+"MyQueue" : {
+  "Type" : "AWS::SQS::Queue",
+  "Properties" : {
+     "QueueName" : "SQSQueue"
+  }
+}
 },
   "Outputs": {}
   }

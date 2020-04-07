@@ -54,5 +54,9 @@
     {
         "ParameterKey": "S3CodeBucket",
         "ParameterValue": "codedeploy.apurvamathur.tld"
+    },
+    {
+        "ParameterKey": "mySNSTopicName",
+        "ParameterValue": "SNSBILL"
     } 
 ]
