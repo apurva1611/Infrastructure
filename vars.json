@@ -37,7 +37,7 @@
     },
     {
         "ParameterKey": "SSHKeyPair",
-        "ParameterValue": "sshProd"
+        "ParameterValue": "SSHProdNew"
     },
     {
         "ParameterKey": "WebserverInstanceType",
@@ -58,5 +58,9 @@
     {
         "ParameterKey": "mySNSTopicName",
         "ParameterValue": "SNSBILL"
+    },
+    {
+        "ParameterKey": "SSLCertificate",
+        "ParameterValue": "arn:aws:acm:us-east-1:934490181790:certificate/105baa63-44f2-4f47-a75d-127f5bb9ee91"
     } 
 ]
